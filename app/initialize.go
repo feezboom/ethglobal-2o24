@@ -15,6 +15,7 @@ func InitializeDbAndHandlers() {
 	r.HandleFunc("/api/answer-question", answerQuestion).Methods("POST")
 	r.HandleFunc("/{tokenID}", nftMetadata).Methods("GET")
 	r.HandleFunc("/nft-metadata/{tokenID}", nftMetadata).Methods("GET")
+	r.HandleFunc("/question", questionByID).Methods("GET")
 
 	http.Handle("/", r)
 }

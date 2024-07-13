@@ -2,17 +2,10 @@ package app
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"go.mongodb.org/mongo-driver/bson"
-	"math/big"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -30,7 +23,11 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 
 	checkSignature(req)
 
-	nft := mintNft(req)
+	nft, err := mintNft(req)
+	if err != nil {
+		http.Error(w, "error minting question nft", http.StatusBadRequest)
+		return
+	}
 
 	q := Question{
 		ID:        fmt.Sprintf("%d", time.Now().Unix()),
@@ -48,74 +45,6 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(q)
-}
-
-type NFT struct {
-	ID       string `json:"id,omitempty" bson:"id,omitempty"`
-	Contract string `json:"contract,omitempty" bson:"contract,omitempty"`
-}
-
-func mintNft(req SubmitQuestionRequest) (NFT, error) {
-	privateKeyHex := os.Getenv("TECHNICAL_WALLET_PRIVATE_KEY")
-	contractAddressHex := os.Getenv("NFT_CONTRACT_ADDRESS")
-	rpcURL := os.Getenv("BLOCKCHAIN_RPC_URL")
-
-	if privateKeyHex == "" || contractAddressHex == "" || rpcURL == "" {
-		return NFT{}, fmt.Errorf("required environment variables are not set")
-	}
-
-	privateKey, err := crypto.HexToECDSA(privateKeyHex)
-	if err != nil {
-		return NFT{}, fmt.Errorf("invalid private key: %v", err)
-	}
-
-	client, err := ethclient.Dial(rpcURL)
-	if err != nil {
-		return NFT{}, fmt.Errorf("failed to connect to the Ethereum mongoClient: %v", err)
-	}
-
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		return NFT{}, fmt.Errorf("invalid public key")
-	}
-
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
-	if err != nil {
-		return NFT{}, fmt.Errorf("failed to get nonce: %v", err)
-	}
-
-	gasPrice, err := client.SuggestGasPrice(context.Background())
-	if err != nil {
-		return NFT{}, fmt.Errorf("failed to get gas price: %v", err)
-	}
-
-	toAddress := common.HexToAddress(req.Receiver)
-	tokenAddress := common.HexToAddress(contractAddressHex)
-
-	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(1)) // Adjust the chain ID as needed
-	if err != nil {
-		return NFT{}, fmt.Errorf("failed to create authorized transactor: %v", err)
-	}
-
-	auth.Nonce = big.NewInt(int64(nonce))
-	auth.Value = big.NewInt(0)      // in wei
-	auth.GasLimit = uint64(3000000) // in units
-	auth.GasPrice = gasPrice
-
-	// Assuming the mint function is of the form mint(to address, tokenID uint256)
-	tx, err := tokenAddress.Mint(auth, toAddress, big.NewInt(time.Now().Unix()))
-	if err != nil {
-		return NFT{}, fmt.Errorf("failed to mint NFT: %v", err)
-	}
-
-	nft := NFT{
-		ID:       tx.Hash().Hex(),
-		Contract: contractAddressHex,
-	}
-
-	return nft, nil
 }
 
 func checkSignature(_ SubmitQuestionRequest) {

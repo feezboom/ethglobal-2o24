@@ -16,7 +16,7 @@ import (
 )
 
 type NFT struct {
-	ID       string `json:"id,omitempty" bson:"id,omitempty"`
+	TokenID  string `json:"id,omitempty" bson:"id,omitempty"`
 	Contract string `json:"contract,omitempty" bson:"contract,omitempty"`
 }
 
@@ -34,9 +34,9 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 		return NFT{}, fmt.Errorf("invalid private key: %v", err)
 	}
 
-	client, err := ethclient.Dial(rpcURL)
+	ethClient, err := ethclient.Dial(rpcURL)
 	if err != nil {
-		return NFT{}, fmt.Errorf("failed to connect to the Ethereum client: %v", err)
+		return NFT{}, fmt.Errorf("failed to connect to the Ethereum ethClient: %v", err)
 	}
 
 	publicKey := privateKey.Public()
@@ -46,12 +46,12 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	}
 
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	nonce, err := ethClient.PendingNonceAt(context.Background(), fromAddress)
 	if err != nil {
 		return NFT{}, fmt.Errorf("failed to get nonce: %v", err)
 	}
 
-	gasPrice, err := client.SuggestGasPrice(context.Background())
+	gasPrice, err := ethClient.SuggestGasPrice(context.Background())
 	if err != nil {
 		return NFT{}, fmt.Errorf("failed to get gas price: %v", err)
 	}
@@ -71,9 +71,9 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 
 	tx := types.NewTransaction(nonce, toAddress, big.NewInt(0), uint64(3000000), gasPrice, data)
 
-	chainID, err := client.NetworkID(context.Background())
+	chainID, err := ethClient.NetworkID(context.Background())
 	if err != nil {
-		return NFT{}, fmt.Errorf("failed to get network ID: %v", err)
+		return NFT{}, fmt.Errorf("failed to get network TokenID: %v", err)
 	}
 
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
@@ -81,13 +81,13 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 		return NFT{}, fmt.Errorf("failed to sign transaction: %v", err)
 	}
 
-	err = client.SendTransaction(context.Background(), signedTx)
+	err = ethClient.SendTransaction(context.Background(), signedTx)
 	if err != nil {
 		return NFT{}, fmt.Errorf("failed to send transaction: %v", err)
 	}
 
 	nft := NFT{
-		ID:       signedTx.Hash().Hex(),
+		TokenID:  ,
 		Contract: contractAddressHex,
 	}
 

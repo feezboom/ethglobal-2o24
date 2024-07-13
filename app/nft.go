@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -77,7 +76,7 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 		return NFT{}, fmt.Errorf("failed to generate NFT ID: %v", err)
 	}
 
-	log.Info("newNftId=" + newNftId.String())
+	println("newNftId=" + newNftId.String())
 
 	data, err := contractAbi.Pack("mint", receiverAddress, newNftId)
 	if err != nil {

@@ -25,6 +25,19 @@ type Question struct {
 	Signature string `json:"signature,omitempty" bson:"signature,omitempty"`
 }
 
+type SubmitQuestionRequest struct {
+	Address   string `json:"address"`
+	Question  string `json:"question"`
+	Signature string `json:"signature"`
+	Receiver  string `json:"receiver"`
+}
+
+type AnswerQuestionRequest struct {
+	QuestionID string `json:"questionId"`
+	Signature  string `json:"signature"`
+	Answer     string `json:"answer"`
+}
+
 var client *mongo.Client
 var collection *mongo.Collection
 
@@ -56,19 +69,26 @@ func connectDB() {
 }
 
 func submitQuestion(w http.ResponseWriter, r *http.Request) {
-	var q Question
-	if err := json.NewDecoder(r.Body).Decode(&q); err != nil {
+	var req SubmitQuestionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if q.Sender == "" || q.Question == "" || q.Receiver == "" || q.Signature == "" {
+	if req.Address == "" || req.Question == "" || req.Receiver == "" || req.Signature == "" {
 		http.Error(w, "All fields (address, question, signature, receiver) are required", http.StatusBadRequest)
 		return
 	}
 
-	q.ID = fmt.Sprintf("%d", time.Now().Unix())
-	q.Answered = false
+	q := Question{
+		ID:        fmt.Sprintf("%d", time.Now().Unix()),
+		Question:  req.Question,
+		Receiver:  req.Receiver,
+		Sender:    req.Address,
+		Answered:  false,
+		Signature: req.Signature,
+	}
+
 	_, err := collection.InsertOne(context.TODO(), q)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -126,11 +146,7 @@ func listAskedQuestions(w http.ResponseWriter, r *http.Request) {
 }
 
 func answerQuestion(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		QuestionID string `json:"questionId"`
-		Signature  string `json:"signature"`
-		Answer     string `json:"answer"`
-	}
+	var req AnswerQuestionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

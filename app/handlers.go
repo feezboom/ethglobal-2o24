@@ -31,8 +31,15 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var id string
+	if req.Id != "" {
+		id = req.Id
+	} else {
+		req.Id = fmt.Sprintf("%d", time.Now().Unix())
+	}
+
 	q := Question{
-		ID:        fmt.Sprintf("%d", time.Now().Unix()),
+		ID:        id,
 		Question:  req.Question,
 		Receiver:  req.Receiver,
 		Sender:    req.Address,

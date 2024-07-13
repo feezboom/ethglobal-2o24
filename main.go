@@ -10,7 +10,7 @@ type Response struct {
 }
 
 func helloWorld(w http.ResponseWriter, r *http.Request) {
-	response := Response{Message: "Hello, World!"}
+	response := Response{Message: "Hello, World 1!"}
 	json.NewEncoder(w).Encode(response)
 }
 

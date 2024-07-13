@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"log"
 	"net/http"
 	"time"
 )
@@ -26,6 +27,7 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 	nft, err := mintNft(req)
 	if err != nil {
 		http.Error(w, "error minting question nft", http.StatusBadRequest)
+		log.Fatal(err)
 		return
 	}
 

@@ -9,6 +9,7 @@ services:
       - "8080:8080"
     environment:
       - MONGO_URI=mongodb://mongo:27017/testdb
+      - PORT=8080
     depends_on:
       - mongo
 

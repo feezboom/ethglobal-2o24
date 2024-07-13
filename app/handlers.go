@@ -76,12 +76,10 @@ func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		} else {
 			json.NewEncoder(w).Encode(new([]Question))
-			return
 		}
-
+		return
 	}
 	defer cursor.Close(context.TODO())
 
@@ -171,8 +169,12 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 
 	err := questionsCollection.FindOne(context.TODO(), bson.M{"tokenID": tokenID}).Decode(&q)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Fatalf("error finding question: %v", err)
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			json.NewEncoder(w).Encode(ResponseNft{})
+		}
+
 		return
 	}
 

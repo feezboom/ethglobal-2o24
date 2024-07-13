@@ -3,9 +3,11 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
 	"strings"
@@ -72,8 +74,14 @@ func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
 
 	cursor, err := questionsCollection.Find(context.TODO(), bson.M{"receiver": address})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		} else {
+			json.NewEncoder(w).Encode(new([]Question))
+			return
+		}
+
 	}
 	defer cursor.Close(context.TODO())
 

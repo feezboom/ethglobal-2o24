@@ -129,7 +129,8 @@ var contractAddress *string
 
 func getContractAddress() string {
 	if contractAddress == nil {
-		*contractAddress = os.Getenv("NFT_CONTRACT_ADDRESS")
+		t := os.Getenv("NFT_CONTRACT_ADDRESS")
+		contractAddress = &t
 	}
 
 	if *contractAddress == "" {

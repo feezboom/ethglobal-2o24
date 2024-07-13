@@ -48,7 +48,7 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 		Sender:    strings.ToLower(req.Sender),
 		Answered:  false,
 		Signature: req.Signature,
-		TokenID:   nft.TokenID,
+		TokenId:   nft.TokenID,
 	}
 
 	_, err = questionsCollection.InsertOne(context.TODO(), q)

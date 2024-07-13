@@ -8,7 +8,7 @@ type Question struct {
 	Answered  bool   `json:"answered,omitempty" bson:"answered,omitempty"`
 	Answer    string `json:"answer,omitempty" bson:"answer,omitempty"`
 	Signature string `json:"signature,omitempty" bson:"signature,omitempty"`
-	TokenID   string `json:"tokenID,omitempty" bson:"tokenID,omitempty"`
+	TokenId   string `json:"tokenId,omitempty" bson:"tokenID,omitempty"`
 }
 
 type SubmitQuestionRequest struct {

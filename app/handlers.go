@@ -51,7 +51,7 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 }
 
 func checkSignature(_ SubmitQuestionRequest) {
-	println("signature check")
+	println("signature check done")
 }
 
 func listQuestions(w http.ResponseWriter, r *http.Request) {

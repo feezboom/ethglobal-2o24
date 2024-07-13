@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
+	"github.com/holiman/uint256"
 	"math/big"
 	"os"
 	"strings"
@@ -20,6 +21,8 @@ type NFT struct {
 	TokenID  string `json:"id,omitempty" bson:"id,omitempty"`
 	Contract string `json:"contract,omitempty" bson:"contract,omitempty"`
 }
+
+var currentNftId *uint64
 
 func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	privateKeyHex := os.Getenv("TECHNICAL_WALLET_PRIVATE_KEY")
@@ -57,20 +60,21 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 		return NFT{}, fmt.Errorf("failed to get gas price: %v", err)
 	}
 
-	toAddress := common.HexToAddress(contractAddressHex)
-	receiverAddress := common.HexToAddress(req.Receiver)
-
 	// Update the ABI to include the tokenID return type
-	contractAbi, err := abi.JSON(strings.NewReader(`[{"constant": false, "inputs": [{"name": "receiver", "type": "address"}], "name": "mintForAddress", "outputs": [{"name": "", "type": "uint256"}], "type": "function"}]`))
+	contractAbi, err := abi.JSON(strings.NewReader(`[{"constant": false, "inputs": [{"name": "to", "type": "address"}, {"name": "tokenId", "type": "uint256"], "name": "mint", "outputs": [], "type": "function"}]`))
 	if err != nil {
 		return NFT{}, fmt.Errorf("failed to parse contract ABI: %v", err)
 	}
 
-	data, err := contractAbi.Pack("mintForAddress", receiverAddress)
+	receiverAddress := common.HexToAddress(req.Receiver)
+
+	newNftId := generateTokenId()
+	data, err := contractAbi.Pack("mint", receiverAddress, uint256.NewInt(newNftId))
 	if err != nil {
 		return NFT{}, fmt.Errorf("failed to pack data: %v", err)
 	}
 
+	toAddress := common.HexToAddress(contractAddressHex)
 	tx := types.NewTransaction(nonce, toAddress, big.NewInt(0), uint64(3000000), gasPrice, data)
 
 	chainID, err := ethClient.NetworkID(context.Background())
@@ -124,4 +128,11 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	}
 
 	return nft, nil
+}
+
+func generateTokenId() uint64 {
+	if currentNftId == nil {
+		// find out maximum nftID from database and return +1
+		// if does not exist then return 0
+	}
 }

@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
 	"strings"
-	"time"
 )
 
 func submitQuestion(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +38,7 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 	if req.Id != "" {
 		id = req.Id
 	} else {
-		id = fmt.Sprintf("%d", time.Now().Unix())
+		id = uuid.New().String()
 	}
 
 	q := Question{

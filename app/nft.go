@@ -65,7 +65,7 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	}
 
 	// Update the ABI to include the tokenID return type
-	contractAbi, err := abi.JSON(strings.NewReader(`[{"constant": false, "inputs": [{"name": "to", "type": "address"}, {"name": "tokenId", "type": "uint256"], "name": "mint", "outputs": [], "type": "function"}]`))
+	contractAbi, err := abi.JSON(strings.NewReader(`[{"constant": false, "inputs": [{"name": "to", "type": "address"}, {"name": "tokenId", "type": "uint256"}], "name": "mint", "outputs": [], "type": "function"}]`))
 	if err != nil {
 		return NFT{}, fmt.Errorf("failed to parse contract ABI: %v", err)
 	}

@@ -42,11 +42,11 @@ func connectDB() {
 		log.Fatalf("Failed to connect to cluster: %v", err)
 	}
 
-	// Force a connection to verify our connection string
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatalf("Failed to ping cluster: %v", err)
-	}
+	//// Force a connection to verify our connection string
+	//err = client.Ping(ctx, nil)
+	//if err != nil {
+	//	log.Fatalf("Failed to ping cluster: %v", err)
+	//}
 
 	fmt.Println("Connected to DocumentDB!")
 

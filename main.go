@@ -39,7 +39,7 @@ type AnswerQuestionRequest struct {
 }
 
 var client *mongo.Client
-var collection *mongo.Collection
+var questionsCollection *mongo.Collection
 
 func connectDB() {
 	err := godotenv.Load()
@@ -65,7 +65,7 @@ func connectDB() {
 	}
 
 	fmt.Println("Connected to MongoDB!")
-	collection = client.Database("testdb").Collection("questions")
+	questionsCollection = client.Database("testdb").Collection("questions")
 }
 
 func submitQuestion(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +89,7 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 		Signature: req.Signature,
 	}
 
-	_, err := collection.InsertOne(context.TODO(), q)
+	_, err := questionsCollection.InsertOne(context.TODO(), q)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -105,7 +105,7 @@ func listQuestions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cursor, err := collection.Find(context.TODO(), bson.M{"receiver": address})
+	cursor, err := questionsCollection.Find(context.TODO(), bson.M{"receiver": address})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -129,7 +129,7 @@ func listAskedQuestions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cursor, err := collection.Find(context.TODO(), bson.M{"sender": address})
+	cursor, err := questionsCollection.Find(context.TODO(), bson.M{"sender": address})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -164,7 +164,7 @@ func answerQuestion(w http.ResponseWriter, r *http.Request) {
 			"answer":   req.Answer,
 		},
 	}
-	_, err := collection.UpdateOne(context.TODO(), filter, update)
+	_, err := questionsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

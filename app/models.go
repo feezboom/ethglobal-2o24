@@ -13,7 +13,7 @@ type Question struct {
 
 type SubmitQuestionRequest struct {
 	Id        string `json:"id"`
-	Address   string `json:"address"`
+	Sender    string `json:"sender"`
 	Question  string `json:"question"`
 	Signature string `json:"signature"`
 	Receiver  string `json:"receiver"`

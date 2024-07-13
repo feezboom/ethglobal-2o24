@@ -17,7 +17,7 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Address == "" || req.Question == "" || req.Receiver == "" || req.Signature == "" {
+	if req.Sender == "" || req.Question == "" || req.Receiver == "" || req.Signature == "" {
 		http.Error(w, "All fields (address, question, signature, receiver) are required", http.StatusBadRequest)
 		return
 	}
@@ -42,7 +42,7 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 		ID:        id,
 		Question:  req.Question,
 		Receiver:  req.Receiver,
-		Sender:    req.Address,
+		Sender:    req.Sender,
 		Answered:  false,
 		Signature: req.Signature,
 		TokenID:   nft.TokenID,
@@ -64,7 +64,7 @@ func checkSignature(_ SubmitQuestionRequest) {
 func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
 	address := r.URL.Query().Get("address")
 	if address == "" {
-		http.Error(w, "Address query parameter is required", http.StatusBadRequest)
+		http.Error(w, "Sender query parameter is required", http.StatusBadRequest)
 		return
 	}
 
@@ -88,7 +88,7 @@ func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
 	address := r.URL.Query().Get("address")
 	signature := r.URL.Query().Get("signature")
 	if address == "" || signature == "" {
-		http.Error(w, "Address and signature query parameters are required", http.StatusBadRequest)
+		http.Error(w, "Sender and signature query parameters are required", http.StatusBadRequest)
 		return
 	}
 

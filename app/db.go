@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,25 +26,26 @@ func connectDB() {
 		log.Fatal("MONGO_URI environment variable is required")
 	}
 
-	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	clientOptions := options.Client().ApplyURI(mongoURI).SetServerAPIOptions(serverAPI)
-
-	mongoClient, err = mongo.Connect(context.TODO(), clientOptions)
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongoURI))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	defer func() {
-		if err := mongoClient.Disconnect(context.TODO()); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	err = mongoClient.Ping(context.TODO(), nil)
+	err = client.Connect(ctx)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to connect to cluster: %v", err)
 	}
 
-	fmt.Println("Connected to MongoDB!")
+	// Force a connection to verify our connection string
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatalf("Failed to ping cluster: %v", err)
+	}
+
+	fmt.Println("Connected to DocumentDB!")
+
 	questionsCollection = mongoClient.Database("testdb").Collection("questions")
 }

@@ -155,33 +155,32 @@ func updateCurrentNftIdInDB(tokenId *big.Int) error {
 func generateTokenId() (*big.Int, error) {
 	var err error
 
-	if currentNftId == nil {
-		var start int64
+	if currentNftId != nil {
+		return currentNftId.Add(currentNftId, big.NewInt(1)), nil
+	}
+
+	var result struct {
+		TokenID uint64 `bson:"tokenId"`
+	}
+	opts := options.FindOne().SetSort(bson.D{{"tokenId", -1}})
+	err = nftIdCollection.FindOne(context.Background(), bson.D{}, opts).Decode(&result)
+
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, err
+	}
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		var start int64 = 0
+
 		fromEnv := os.Getenv("CURRENT_NFT_ID")
-		if fromEnv == "" {
-			start = 0
-		} else {
+		if fromEnv != "" {
 			start, err = strconv.ParseInt(fromEnv, 10, 64)
 			if err != nil {
 				return nil, fmt.Errorf("error parsing CURRENT_NFT_ID from .env %s", fromEnv)
 			}
 		}
-
-		var result struct {
-			TokenID uint64 `bson:"tokenId"`
-		}
-		opts := options.FindOne().SetSort(bson.D{{"tokenId", -1}})
-		err := nftIdCollection.FindOne(context.Background(), bson.D{}, opts).Decode(&result)
-		if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, err
-		}
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			currentNftId = big.NewInt(start)
-		} else {
-			currentNftId = big.NewInt(int64(result.TokenID + 1))
-		}
+		currentNftId = big.NewInt(start)
 	} else {
-		currentNftId = currentNftId.Add(currentNftId, big.NewInt(1))
+		currentNftId = big.NewInt(int64(result.TokenID + 1))
 	}
 
 	return currentNftId, nil

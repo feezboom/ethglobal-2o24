@@ -188,5 +188,6 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 		Attributes:  nil,
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(nft)
 }

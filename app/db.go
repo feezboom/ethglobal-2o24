@@ -15,6 +15,7 @@ import (
 
 var mongoClient *mongo.Client
 var questionsCollection *mongo.Collection
+var nftIdCollection *mongo.Collection
 
 func connectDB() {
 	err := godotenv.Load()
@@ -42,13 +43,8 @@ func connectDB() {
 		log.Fatalf("Failed to connect to cluster: %v", err)
 	}
 
-	//// Force a connection to verify our connection string
-	//err = mongoClient.Ping(ctx, nil)
-	//if err != nil {
-	//	log.Fatalf("Failed to ping cluster: %v", err)
-	//}
-
 	fmt.Println("Connected to DocumentDB!")
 
 	questionsCollection = mongoClient.Database("testdb").Collection("questions")
+	nftIdCollection = mongoClient.Database("testdb").Collection("nftIdCollection")
 }

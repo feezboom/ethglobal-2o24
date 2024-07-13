@@ -30,7 +30,7 @@ var currentNftId *big.Int
 
 func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	privateKeyHex := os.Getenv("TECHNICAL_WALLET_PRIVATE_KEY")
-	contractAddressHex := os.Getenv("NFT_CONTRACT_ADDRESS")
+	contractAddressHex := getContractAddress()
 	rpcURL := os.Getenv("BLOCKCHAIN_RPC_URL")
 
 	if privateKeyHex == "" || contractAddressHex == "" || rpcURL == "" {
@@ -123,6 +123,20 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	}
 
 	return nft, nil
+}
+
+var contractAddress *string
+
+func getContractAddress() string {
+	if contractAddress == nil {
+		*contractAddress = os.Getenv("NFT_CONTRACT_ADDRESS")
+	}
+
+	if *contractAddress == "" {
+		panic("required environment variable NFT_CONTRACT_ADDRESS not set")
+	}
+
+	return *contractAddress
 }
 
 func updateCurrentNftIdInDB(tokenId *big.Int) error {

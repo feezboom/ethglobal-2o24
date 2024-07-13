@@ -1,12 +1,19 @@
 package app
 
-import "net/http"
+import (
+	"github.com/gorilla/mux"
+	"net/http"
+)
 
 func InitializeDbAndHandlers() {
 	connectDB()
 
-	http.HandleFunc("/api/submit-question", submitQuestion)
-	http.HandleFunc("/api/questions", listQuestionsForMe)
-	http.HandleFunc("/api/asked-questions", listQuestionsFromMe)
-	http.HandleFunc("/api/answer-question", answerQuestion)
+	r := mux.NewRouter()
+	r.HandleFunc("/api/submit-question", submitQuestion).Methods("POST")
+	r.HandleFunc("/api/questions", listQuestionsForMe).Methods("GET")
+	r.HandleFunc("/api/asked-questions", listQuestionsFromMe).Methods("GET")
+	r.HandleFunc("/api/answer-question", answerQuestion).Methods("POST")
+	r.HandleFunc("/nft-metadata/{tokenID}", nftMetadata).Methods("GET")
+
+	http.Handle("/", r)
 }

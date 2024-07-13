@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"net/http"
@@ -135,4 +136,44 @@ func answerQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func nftMetadata(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tokenID := vars["tokenID"]
+
+	if tokenID == "" {
+		http.Error(w, "NFT token ID is required", http.StatusBadRequest)
+		return
+	}
+
+	type NftAttribute struct {
+		TraitType string `json:"trait_type"`
+		Value     string `json:"value"`
+	}
+
+	type ResponseNft struct {
+		Name        string         `json:"id"`
+		Description string         `json:"description"`
+		Image       string         `json:"image"`
+		Attributes  []NftAttribute `json:"attributes"`
+	}
+
+	var q Question
+
+	err := questionsCollection.FindOne(context.TODO(), bson.M{"tokenID": tokenID}).Decode(q)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Fatalf("error finding question: %v", err)
+		return
+	}
+
+	nft := ResponseNft{
+		Name:        "My fckn NFT",
+		Description: "My fckn NFT description",
+		Image:       "https://files.slack.com/files-pri/T3V7DQ6HW-F07C9P67HLJ/nft_ask.png",
+		Attributes:  nil,
+	}
+
+	json.NewEncoder(w).Encode(nft)
 }

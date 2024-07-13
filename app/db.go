@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
@@ -26,7 +27,9 @@ func connectDB() {
 		log.Fatal("MONGO_URI environment variable is required")
 	}
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoURI))
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongoURI).SetTLSConfig(&tls.Config{
+		InsecureSkipVerify: true, // DocumentDB requires this setting for TLS connections
+	}))
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}

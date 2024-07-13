@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"math/big"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -135,7 +136,20 @@ func updateCurrentNftIdInDB(tokenId *big.Int) error {
 }
 
 func generateTokenId() (*big.Int, error) {
+	var err error
+
 	if currentNftId == nil {
+		var start int64
+		fromEnv := os.Getenv("CURRENT_NFT_ID")
+		if fromEnv == "" {
+			start = 0
+		} else {
+			start, err = strconv.ParseInt(fromEnv, 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing CURRENT_NFT_ID from .env %s", fromEnv)
+			}
+		}
+
 		var result struct {
 			TokenID uint64 `bson:"tokenId"`
 		}
@@ -145,7 +159,7 @@ func generateTokenId() (*big.Int, error) {
 			return nil, err
 		}
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			currentNftId = big.NewInt(0)
+			currentNftId = big.NewInt(start)
 		} else {
 			currentNftId = big.NewInt(int64(result.TokenID + 1))
 		}

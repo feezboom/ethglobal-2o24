@@ -4,7 +4,7 @@
 cd /home/ec2-user/ethglobal-2o24 || (echo "error" & exit)
 
 # Pull the latest changes from the repository
-git pull origin main
+git pull origin master
 
 # Build the Docker image
 sudo docker build -t go-rest-api .

@@ -61,7 +61,7 @@ func checkSignature(_ SubmitQuestionRequest) {
 	println("signature check done")
 }
 
-func listQuestions(w http.ResponseWriter, r *http.Request) {
+func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
 	address := r.URL.Query().Get("address")
 	if address == "" {
 		http.Error(w, "Address query parameter is required", http.StatusBadRequest)
@@ -84,7 +84,7 @@ func listQuestions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(questions)
 }
 
-func listAskedQuestions(w http.ResponseWriter, r *http.Request) {
+func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
 	address := r.URL.Query().Get("address")
 	signature := r.URL.Query().Get("signature")
 	if address == "" || signature == "" {

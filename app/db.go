@@ -2,10 +2,7 @@ package app
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -28,25 +25,19 @@ func connectDB() {
 		log.Fatal("MONGO_URI environment variable is required")
 	}
 
-	// Load the CA certificate
-	caCert, err := ioutil.ReadFile("path/to/global-bundle.pem")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-
-	tlsConfig := &tls.Config{
-		RootCAs: caCertPool,
-	}
-
-	clientOptions := options.Client().ApplyURI(mongoURI).SetTLSConfig(tlsConfig)
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	clientOptions := options.Client().ApplyURI(mongoURI).SetServerAPIOptions(serverAPI)
 
 	mongoClient, err = mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	defer func() {
+		if err := mongoClient.Disconnect(context.TODO()); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	err = mongoClient.Ping(context.TODO(), nil)
 	if err != nil {

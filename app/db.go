@@ -27,23 +27,23 @@ func connectDB() {
 		log.Fatal("MONGO_URI environment variable is required")
 	}
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoURI).SetTLSConfig(&tls.Config{
+	mongoClient, err = mongo.NewClient(options.Client().ApplyURI(mongoURI).SetTLSConfig(&tls.Config{
 		InsecureSkipVerify: true, // DocumentDB requires this setting for TLS connections
 	}))
 	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
+		log.Fatalf("Failed to create mongoClient: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err = client.Connect(ctx)
+	err = mongoClient.Connect(ctx)
 	if err != nil {
 		log.Fatalf("Failed to connect to cluster: %v", err)
 	}
 
 	//// Force a connection to verify our connection string
-	//err = client.Ping(ctx, nil)
+	//err = mongoClient.Ping(ctx, nil)
 	//if err != nil {
 	//	log.Fatalf("Failed to ping cluster: %v", err)
 	//}

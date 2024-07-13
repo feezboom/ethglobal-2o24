@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -41,8 +42,8 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 	q := Question{
 		ID:        id,
 		Question:  req.Question,
-		Receiver:  req.Receiver,
-		Sender:    req.Sender,
+		Receiver:  strings.ToLower(req.Receiver),
+		Sender:    strings.ToLower(req.Sender),
 		Answered:  false,
 		Signature: req.Signature,
 		TokenID:   nft.TokenID,
@@ -62,7 +63,7 @@ func checkSignature(_ SubmitQuestionRequest) {
 }
 
 func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
-	address := r.URL.Query().Get("address")
+	address := strings.ToLower(r.URL.Query().Get("address"))
 	if address == "" {
 		http.Error(w, "Sender query parameter is required", http.StatusBadRequest)
 		return
@@ -85,7 +86,7 @@ func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
 }
 
 func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
-	address := r.URL.Query().Get("address")
+	address := strings.ToLower(r.URL.Query().Get("address"))
 	signature := r.URL.Query().Get("signature")
 	if address == "" || signature == "" {
 		http.Error(w, "Sender and signature query parameters are required", http.StatusBadRequest)

@@ -36,9 +36,10 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 		Sender:    req.Address,
 		Answered:  false,
 		Signature: req.Signature,
+		TokenID:   nft.TokenID,
 	}
 
-	_, err := questionsCollection.InsertOne(context.TODO(), q)
+	_, err = questionsCollection.InsertOne(context.TODO(), q)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

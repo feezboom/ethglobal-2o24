@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/holiman/uint256"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -26,7 +25,7 @@ type NFT struct {
 	Contract string `json:"contract,omitempty" bson:"contract,omitempty"`
 }
 
-var currentNftId *uint64
+var currentNftId *big.Int
 
 func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	privateKeyHex := os.Getenv("TECHNICAL_WALLET_PRIVATE_KEY")
@@ -77,7 +76,7 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 		return NFT{}, fmt.Errorf("failed to generate NFT ID: %v", err)
 	}
 
-	data, err := contractAbi.Pack("mint", receiverAddress, uint256.NewInt(newNftId))
+	data, err := contractAbi.Pack("mint", receiverAddress, newNftId)
 	if err != nil {
 		return NFT{}, fmt.Errorf("failed to pack data: %v", err)
 	}
@@ -110,35 +109,15 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	}
 
 	// Decode the returned tokenID from the logs
-	var tokenID *big.Int
-	for _, vLog := range receipt.Logs {
-		if vLog.Address == toAddress {
-			eventAbi, err := abi.JSON(strings.NewReader(`[{"anonymous":false,"inputs":[{"indexed":true,"name":"receiver","type":"address"},{"indexed":false,"name":"tokenID","type":"uint256"}],"name":"MintForAddress","type":"event"}]`))
-			if err != nil {
-				return NFT{}, fmt.Errorf("failed to parse event ABI: %v", err)
-			}
-
-			err = eventAbi.UnpackIntoInterface(&tokenID, "MintForAddress", vLog.Data)
-			if err != nil {
-				return NFT{}, fmt.Errorf("failed to unpack log data: %v", err)
-			}
-			break
-		}
-	}
-
-	if tokenID == nil {
-		return NFT{}, fmt.Errorf("failed to get tokenID from transaction receipt")
-	}
-
 	nft := NFT{
-		TokenID:  tokenID.String(),
+		TokenID:  currentNftId.String(),
 		Contract: contractAddressHex,
 	}
 
 	return nft, nil
 }
 
-func generateTokenId() (uint64, error) {
+func generateTokenId() (*big.Int, error) {
 	if currentNftId == nil {
 		var result struct {
 			TokenID uint64 `bson:"tokenId"`
@@ -146,18 +125,16 @@ func generateTokenId() (uint64, error) {
 		opts := options.FindOne().SetSort(bson.D{{"tokenId", -1}})
 		err := nftIdCollection.FindOne(context.Background(), bson.D{}, opts).Decode(&result)
 		if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
-			return 0, err
+			return nil, err
 		}
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			currentNftId = new(uint64)
-			*currentNftId = 0
+			currentNftId = big.NewInt(0)
 		} else {
-			currentNftId = new(uint64)
-			*currentNftId = result.TokenID + 1
+			currentNftId = big.NewInt(int64(result.TokenID + 1))
 		}
 	} else {
-		*currentNftId++
+		currentNftId = currentNftId.Add(currentNftId, big.NewInt(1))
 	}
 
-	return *currentNftId, nil
+	return currentNftId, nil
 }

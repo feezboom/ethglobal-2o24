@@ -91,6 +91,29 @@ func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(questions)
 }
 
+func questionByID(w http.ResponseWriter, r *http.Request) {
+	id := strings.ToLower(r.URL.Query().Get("id"))
+
+	if id == "" {
+		http.Error(w, "Question ID is required", http.StatusBadRequest)
+		return
+	}
+
+	var q Question
+	err := questionsCollection.FindOne(context.TODO(), bson.M{"id": id}).Decode(&q)
+	if err != nil {
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(q)
+}
+
 func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
 	address := strings.ToLower(r.URL.Query().Get("address"))
 	signature := r.URL.Query().Get("signature")

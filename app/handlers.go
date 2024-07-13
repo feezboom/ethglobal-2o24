@@ -169,8 +169,8 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nft := ResponseNft{
-		Name:        "My fckn NFT",
-		Description: "My fckn NFT description",
+		Name:        "New Question",
+		Description: q.Question,
 		Image:       "https://files.slack.com/files-pri/T3V7DQ6HW-F07C9P67HLJ/nft_ask.png",
 		Attributes:  nil,
 	}

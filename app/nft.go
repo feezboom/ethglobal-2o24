@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -108,7 +109,8 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	}
 
 	if receipt.Status != 1 {
-		return NFT{}, fmt.Errorf("transaction failed")
+		log.Error("transaction failed")
+		return NFT{}, nil
 	}
 
 	// Update the current NFT ID in the database

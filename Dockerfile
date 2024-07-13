@@ -20,4 +20,4 @@ RUN go build -o main .
 EXPOSE 8080
 
 # Pass environment variable and run the executable
-CMD ["sh", "-c", "MONGO_URI=${MONGO_URI} ./main"]
+CMD ["sh", "-c", "./main"]

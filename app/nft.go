@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -59,7 +60,8 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	toAddress := common.HexToAddress(contractAddressHex)
 	receiverAddress := common.HexToAddress(req.Receiver)
 
-	contractAbi, err := abi.JSON(strings.NewReader(`[{"constant": false, "inputs": [{"name": "receiver", "type": "address"}], "name": "mintForAddress", "outputs": [], "type": "function"}]`))
+	// Update the ABI to include the tokenID return type
+	contractAbi, err := abi.JSON(strings.NewReader(`[{"constant": false, "inputs": [{"name": "receiver", "type": "address"}], "name": "mintForAddress", "outputs": [{"name": "", "type": "uint256"}], "type": "function"}]`))
 	if err != nil {
 		return NFT{}, fmt.Errorf("failed to parse contract ABI: %v", err)
 	}
@@ -73,7 +75,7 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 
 	chainID, err := ethClient.NetworkID(context.Background())
 	if err != nil {
-		return NFT{}, fmt.Errorf("failed to get network TokenID: %v", err)
+		return NFT{}, fmt.Errorf("failed to get network ID: %v", err)
 	}
 
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
@@ -86,8 +88,38 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 		return NFT{}, fmt.Errorf("failed to send transaction: %v", err)
 	}
 
+	receipt, err := bind.WaitMined(context.Background(), ethClient, signedTx)
+	if err != nil {
+		return NFT{}, fmt.Errorf("transaction mining failed: %v", err)
+	}
+
+	if receipt.Status != 1 {
+		return NFT{}, fmt.Errorf("transaction failed")
+	}
+
+	// Decode the returned tokenID from the logs
+	var tokenID *big.Int
+	for _, vLog := range receipt.Logs {
+		if vLog.Address == toAddress {
+			eventAbi, err := abi.JSON(strings.NewReader(`[{"anonymous":false,"inputs":[{"indexed":true,"name":"receiver","type":"address"},{"indexed":false,"name":"tokenID","type":"uint256"}],"name":"MintForAddress","type":"event"}]`))
+			if err != nil {
+				return NFT{}, fmt.Errorf("failed to parse event ABI: %v", err)
+			}
+
+			err = eventAbi.UnpackIntoInterface(&tokenID, "MintForAddress", vLog.Data)
+			if err != nil {
+				return NFT{}, fmt.Errorf("failed to unpack log data: %v", err)
+			}
+			break
+		}
+	}
+
+	if tokenID == nil {
+		return NFT{}, fmt.Errorf("failed to get tokenID from transaction receipt")
+	}
+
 	nft := NFT{
-		TokenID:  ,
+		TokenID:  tokenID.String(),
 		Contract: contractAddressHex,
 	}
 

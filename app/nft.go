@@ -3,8 +3,12 @@ package app
 import (
 	"context"
 	"crypto/ecdsa"
+	"errors"
 	"fmt"
 	"github.com/holiman/uint256"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"math/big"
 	"os"
 	"strings"
@@ -68,7 +72,11 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 
 	receiverAddress := common.HexToAddress(req.Receiver)
 
-	newNftId := generateTokenId()
+	newNftId, err := generateTokenId()
+	if err != nil {
+		return NFT{}, fmt.Errorf("failed to generate NFT ID: %v", err)
+	}
+
 	data, err := contractAbi.Pack("mint", receiverAddress, uint256.NewInt(newNftId))
 	if err != nil {
 		return NFT{}, fmt.Errorf("failed to pack data: %v", err)
@@ -130,9 +138,26 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	return nft, nil
 }
 
-func generateTokenId() uint64 {
+func generateTokenId() (uint64, error) {
 	if currentNftId == nil {
-		// find out maximum nftID from database and return +1
-		// if does not exist then return 0
+		var result struct {
+			TokenID uint64 `bson:"tokenId"`
+		}
+		opts := options.FindOne().SetSort(bson.D{{"tokenId", -1}})
+		err := nftIdCollection.FindOne(context.Background(), bson.D{}, opts).Decode(&result)
+		if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+			return 0, err
+		}
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			currentNftId = new(uint64)
+			*currentNftId = 0
+		} else {
+			currentNftId = new(uint64)
+			*currentNftId = result.TokenID + 1
+		}
+	} else {
+		*currentNftId++
 	}
+
+	return *currentNftId, nil
 }

@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -38,14 +36,6 @@ func connectDB() {
 	if mongoURI == "" {
 		log.Fatal("MONGO_URI environment variable is required")
 	}
-
-	caCert, err := ioutil.ReadFile("/usr/local/share/ca-certificates/global-bundle.pem")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
 
 	clientOptions := options.Client().ApplyURI(mongoURI)
 

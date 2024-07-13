@@ -108,6 +108,11 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 		return NFT{}, fmt.Errorf("transaction failed")
 	}
 
+	// Update the current NFT ID in the database
+	if err = updateCurrentNftIdInDB(currentNftId); err != nil {
+		return NFT{}, fmt.Errorf("failed to update NFT ID in database: %v", err)
+	}
+
 	// Decode the returned tokenID from the logs
 	nft := NFT{
 		TokenID:  currentNftId.String(),
@@ -115,6 +120,16 @@ func mintNft(req SubmitQuestionRequest) (NFT, error) {
 	}
 
 	return nft, nil
+}
+
+func updateCurrentNftIdInDB(tokenId *big.Int) error {
+	_, err := nftIdCollection.UpdateOne(
+		context.Background(),
+		bson.D{},
+		bson.D{{"$set", bson.D{{"tokenId", tokenId.Uint64()}}}},
+		options.Update().SetUpsert(true),
+	)
+	return err
 }
 
 func generateTokenId() (*big.Int, error) {

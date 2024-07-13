@@ -146,5 +146,7 @@ func main() {
 	http.HandleFunc("/api/questions", listQuestions)
 	http.HandleFunc("/api/asked-questions", listAskedQuestions)
 	http.HandleFunc("/api/answer-question", answerQuestion)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	port := os.Getenv("PORT")
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

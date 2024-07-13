@@ -136,7 +136,11 @@ func answerQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 	_, err := questionsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
 		return
 	}
 

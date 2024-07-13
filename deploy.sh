@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Navigate to the project directory
-cd /home/ec2-user/ethglobal-2o24
+cd /home/ec2-user/ethglobal-2o24 || (echo "error" & exit)
 
 # Pull the latest changes from the repository
 git pull origin main

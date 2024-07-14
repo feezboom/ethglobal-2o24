@@ -69,6 +69,7 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("[%s] Question submitted successfully: %+v", requestID, q)
+	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(q)
 }
 
@@ -106,6 +107,8 @@ func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("[%s] Questions retrieved successfully for receiver: %s", requestID, address)
+
+	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(questions)
 }
 
@@ -169,6 +172,7 @@ func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("[%s] Questions retrieved successfully for sender: %s", requestID, address)
+	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(questions)
 }
 
@@ -218,6 +222,7 @@ func submitAnswer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("[%s] Question answered successfully: %+v", requestID, q)
+	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(q)
 	w.WriteHeader(http.StatusOK)
 }

@@ -15,17 +15,22 @@ import (
 	"strings"
 )
 
+func generateRequestID() string {
+	return uuid.New().String()
+}
+
 func submitQuestion(w http.ResponseWriter, r *http.Request) {
-	log.Println("submitQuestion called")
+	requestID := generateRequestID()
+	log.Printf("[%s] submitQuestion called", requestID)
 	var req SubmitQuestionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Println("Error decoding request:", err)
+		log.Printf("[%s] Error decoding request: %v", requestID, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if req.Sender == "" || req.Question == "" || req.Receiver == "" || req.Signature == "" {
-		log.Println("Missing required fields in request")
+		log.Printf("[%s] Missing required fields in request", requestID)
 		http.Error(w, "All fields (address, question, signature, receiver) are required", http.StatusBadRequest)
 		return
 	}
@@ -34,7 +39,7 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 
 	nft, err := mintNft(req)
 	if err != nil {
-		log.Println("Error minting question NFT:", err)
+		log.Printf("[%s] Error minting question NFT: %v", requestID, err)
 		http.Error(w, "error minting question nft", http.StatusBadRequest)
 		return
 	}
@@ -58,12 +63,12 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 
 	_, err = questionsCollection.InsertOne(context.TODO(), q)
 	if err != nil {
-		log.Println("Error inserting question into database:", err)
+		log.Printf("[%s] Error inserting question into database: %v", requestID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	log.Println("Question submitted successfully:", q)
+	log.Printf("[%s] Question submitted successfully: %+v", requestID, q)
 	json.NewEncoder(w).Encode(q)
 }
 
@@ -72,17 +77,18 @@ func checkSignature(_ SubmitQuestionRequest) {
 }
 
 func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
-	log.Println("listQuestionsForMe called")
+	requestID := generateRequestID()
+	log.Printf("[%s] listQuestionsForMe called", requestID)
 	address := strings.ToLower(r.URL.Query().Get("address"))
 	if address == "" {
-		log.Println("Missing 'address' query parameter")
+		log.Printf("[%s] Missing 'address' query parameter", requestID)
 		http.Error(w, "Sender query parameter is required", http.StatusBadRequest)
 		return
 	}
 
 	cursor, err := questionsCollection.Find(context.TODO(), bson.M{"receiver": address})
 	if err != nil {
-		log.Println("Error finding questions for receiver:", err)
+		log.Printf("[%s] Error finding questions for receiver: %v", requestID, err)
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
@@ -94,28 +100,29 @@ func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
 
 	var questions []Question
 	if err := cursor.All(context.TODO(), &questions); err != nil {
-		log.Println("Error decoding questions:", err)
+		log.Printf("[%s] Error decoding questions: %v", requestID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	log.Println("Questions retrieved successfully for receiver:", address)
+	log.Printf("[%s] Questions retrieved successfully for receiver: %s", requestID, address)
 	json.NewEncoder(w).Encode(questions)
 }
 
 func questionByID(w http.ResponseWriter, r *http.Request) {
-	log.Println("questionByID called")
+	requestID := generateRequestID()
+	log.Printf("[%s] questionByID called", requestID)
 	id := strings.ToLower(r.URL.Query().Get("id"))
 
 	if id == "" {
-		log.Println("Missing 'id' query parameter")
+		log.Printf("[%s] Missing 'id' query parameter", requestID)
 		http.Error(w, "Question ID is required", http.StatusBadRequest)
 		return
 	}
 
 	q, err := findQuestionById(id)
 	if err != nil {
-		log.Println("Error finding question by ID:", err)
+		log.Printf("[%s] Error finding question by ID: %v", requestID, err)
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
@@ -124,7 +131,7 @@ func questionByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("Question retrieved successfully by ID:", id)
+	log.Printf("[%s] Question retrieved successfully by ID: %s", requestID, id)
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(q)
 }
@@ -136,18 +143,19 @@ func findQuestionById(id string) (Question, error) {
 }
 
 func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
-	log.Println("listQuestionsFromMe called")
+	requestID := generateRequestID()
+	log.Printf("[%s] listQuestionsFromMe called", requestID)
 	address := strings.ToLower(r.URL.Query().Get("sender"))
 	signature := r.URL.Query().Get("signature")
 	if address == "" || signature == "" {
-		log.Println("Missing 'address' or 'signature' query parameters")
+		log.Printf("[%s] Missing 'address' or 'signature' query parameters", requestID)
 		http.Error(w, "Sender and signature query parameters are required", http.StatusBadRequest)
 		return
 	}
 
 	cursor, err := questionsCollection.Find(context.TODO(), bson.M{"sender": address})
 	if err != nil {
-		log.Println("Error finding questions from sender:", err)
+		log.Printf("[%s] Error finding questions from sender: %v", requestID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -155,26 +163,27 @@ func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
 
 	var questions []Question
 	if err := cursor.All(context.TODO(), &questions); err != nil {
-		log.Println("Error decoding questions:", err)
+		log.Printf("[%s] Error decoding questions: %v", requestID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	log.Println("Questions retrieved successfully for sender:", address)
+	log.Printf("[%s] Questions retrieved successfully for sender: %s", requestID, address)
 	json.NewEncoder(w).Encode(questions)
 }
 
 func submitAnswer(w http.ResponseWriter, r *http.Request) {
-	log.Println("submitAnswer called")
+	requestID := generateRequestID()
+	log.Printf("[%s] submitAnswer called", requestID)
 	var req AnswerQuestionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Println("Error decoding request:", err)
+		log.Printf("[%s] Error decoding request: %v", requestID, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if req.QuestionID == "" || req.Signature == "" || req.Answer == "" {
-		log.Println("Missing required fields in request")
+		log.Printf("[%s] Missing required fields in request", requestID)
 		http.Error(w, "All fields (questionId, signature, answer) are required", http.StatusBadRequest)
 		return
 	}
@@ -188,7 +197,7 @@ func submitAnswer(w http.ResponseWriter, r *http.Request) {
 	}
 	_, err := questionsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		log.Println("Error updating question with answer:", err)
+		log.Printf("[%s] Error updating question with answer: %v", requestID, err)
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
@@ -199,7 +208,7 @@ func submitAnswer(w http.ResponseWriter, r *http.Request) {
 
 	q, err := findQuestionById(req.QuestionID)
 	if err != nil {
-		log.Println("Error finding question by ID after update:", err)
+		log.Printf("[%s] Error finding question by ID after update: %v", requestID, err)
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
@@ -208,18 +217,19 @@ func submitAnswer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("Question answered successfully:", q)
+	log.Printf("[%s] Question answered successfully: %+v", requestID, q)
 	json.NewEncoder(w).Encode(q)
 	w.WriteHeader(http.StatusOK)
 }
 
 func nftMetadata(w http.ResponseWriter, r *http.Request) {
-	log.Println("nftMetadata called")
+	requestID := generateRequestID()
+	log.Printf("[%s] nftMetadata called", requestID)
 	vars := mux.Vars(r)
 	tokenID := vars["tokenID"]
 
 	if tokenID == "" {
-		log.Println("Missing 'tokenID' path parameter")
+		log.Printf("[%s] Missing 'tokenID' path parameter", requestID)
 		http.Error(w, "NFT token ID is required", http.StatusBadRequest)
 		return
 	}
@@ -240,7 +250,7 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 
 	err := questionsCollection.FindOne(context.TODO(), bson.M{"tokenID": tokenID}).Decode(&q)
 	if err != nil {
-		log.Println("Error finding question by tokenID:", err)
+		log.Printf("[%s] Error finding question by tokenID: %v", requestID, err)
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
@@ -262,7 +272,7 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	log.Println("NFT metadata retrieved successfully for tokenID:", tokenID)
+	log.Printf("[%s] NFT metadata retrieved successfully for tokenID: %s", requestID, tokenID)
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(nft)
 }

@@ -137,7 +137,7 @@ func findQuestionById(id string) (Question, error) {
 
 func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
 	log.Println("listQuestionsFromMe called")
-	address := strings.ToLower(r.URL.Query().Get("address"))
+	address := strings.ToLower(r.URL.Query().Get("sender"))
 	signature := r.URL.Query().Get("signature")
 	if address == "" || signature == "" {
 		log.Println("Missing 'address' or 'signature' query parameters")

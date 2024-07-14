@@ -255,7 +255,7 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 
 	err := questionsCollection.FindOne(context.TODO(), bson.M{"tokenID": tokenID}).Decode(&q)
 	if err != nil {
-		log.Printf("[%s] Error finding question by tokenID: %v", requestID, err)
+		log.Printf("[%s] Error finding question by tokenID=%s: %v", requestID, tokenID, err)
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {

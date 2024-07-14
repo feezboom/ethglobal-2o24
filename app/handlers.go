@@ -306,5 +306,7 @@ func buildDescription(q Question) string {
 		description = "Q: ###encrypted###"
 	}
 
+	description += "\n\n\nSee your questions and answers here https://ask-fm-onchain-hackathon-jul-2024.fly.dev/"
+
 	return description
 }

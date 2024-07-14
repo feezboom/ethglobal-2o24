@@ -295,7 +295,7 @@ func buildDescription(q Question) string {
 	if q.Answered {
 		description = "Q:" + description + "\nAnswer: " + q.Answer
 	} else {
-		description = "Q: ###encrypted###" + description
+		description = "Q: ###encrypted###"
 	}
 
 	return description

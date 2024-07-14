@@ -168,7 +168,7 @@ func generateTokenId() (*big.Int, error) {
 			return nil, fmt.Errorf("error parsing CURRENT_NFT_ID from .env %s", fromEnv)
 		}
 
-		currentNftId = new(big.Int).SetInt64(start)
+		currentNftId = new(big.Int).SetInt64(start + 1)
 		return currentNftId, nil
 	}
 

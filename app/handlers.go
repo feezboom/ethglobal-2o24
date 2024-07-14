@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -197,7 +198,7 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 
 	type NftAttribute struct {
 		TraitType string `json:"trait_type"`
-		Value     string `json:"value"`
+		Value     any    `json:"value"`
 	}
 
 	type ResponseNft struct {
@@ -222,20 +223,25 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 
 	nft := ResponseNft{
 		Name:        "New Question",
-		Description: q.Question,
+		Description: buildDescription(q),
 		Image:       "https://files.slack.com/files-pri/T3V7DQ6HW-F07C9P67HLJ/nft_ask.png",
 		Attributes: []NftAttribute{
 			{
-				TraitType: "OriginalQuestion",
-				Value:     q.Question,
-			},
-			{
-				TraitType: "EncryptedQuestion",
-				Value:     "encrypted:" + q.Question,
+				TraitType: "IsAnswered",
+				Value:     strconv.FormatBool(true),
 			},
 		},
 	}
 
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(nft)
+}
+
+func buildDescription(q Question) string {
+	answer := "Original question: " + q.Question + "\nEncrypted question: encrypted#" + q.Question
+	if q.Answered {
+		answer += "\nAnswer: " + q.Answer
+	}
+
+	return answer
 }

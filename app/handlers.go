@@ -240,7 +240,7 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 
 func buildImage(q Question) string {
 	if q.Answered {
-		return "https://expression-statement.fly.dev/ask-nft?text=" + url.QueryEscape(q.Answer)
+		return "https://expression-statement.fly.dev/ask-nft?text=" + url.QueryEscape(q.Question)
 	}
 	return "ipfs://QmNSJtpv8W85T3ZSPtmaZvSS3bK8jp7Pus36qT8beEE42e"
 }

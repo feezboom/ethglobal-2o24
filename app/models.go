@@ -1,14 +1,20 @@
 package app
 
+import (
+	"time"
+)
+
 type Question struct {
-	ID        string `json:"id,omitempty" bson:"id,omitempty"`
-	Question  string `json:"question,omitempty" bson:"question,omitempty"`
-	Receiver  string `json:"receiver,omitempty" bson:"receiver,omitempty"`
-	Sender    string `json:"sender,omitempty" bson:"sender,omitempty"`
-	Answered  bool   `json:"answered,omitempty" bson:"answered,omitempty"`
-	Answer    string `json:"answer,omitempty" bson:"answer,omitempty"`
-	Signature string `json:"signature,omitempty" bson:"signature,omitempty"`
-	TokenId   string `json:"tokenId,omitempty" bson:"tokenID,omitempty"`
+	ID              string    `json:"id,omitempty" bson:"id,omitempty"`
+	Question        string    `json:"question,omitempty" bson:"question,omitempty"`
+	Receiver        string    `json:"receiver,omitempty" bson:"receiver,omitempty"`
+	Sender          string    `json:"sender,omitempty" bson:"sender,omitempty"`
+	Answered        bool      `json:"answered,omitempty" bson:"answered,omitempty"`
+	Answer          string    `json:"answer,omitempty" bson:"answer,omitempty"`
+	Signature       string    `json:"signature,omitempty" bson:"signature,omitempty"`
+	TokenId         string    `json:"tokenId,omitempty" bson:"tokenID,omitempty"`
+	CreatedAt       time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
+	ContractAddress string    `json:"contractAddress,omitempty" bson:"contractAddress,omitempty"`
 }
 
 type SubmitQuestionRequest struct {

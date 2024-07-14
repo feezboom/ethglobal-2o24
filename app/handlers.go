@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func generateRequestID() string {
@@ -52,13 +53,15 @@ func submitQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	q := Question{
-		ID:        id,
-		Question:  req.Question,
-		Receiver:  strings.ToLower(req.Receiver),
-		Sender:    strings.ToLower(req.Sender),
-		Answered:  false,
-		Signature: req.Signature,
-		TokenId:   nft.TokenID,
+		ID:              id,
+		Question:        req.Question,
+		Receiver:        strings.ToLower(req.Receiver),
+		Sender:          strings.ToLower(req.Sender),
+		Answered:        false,
+		Signature:       req.Signature,
+		TokenId:         nft.TokenID,
+		CreatedAt:       time.Now(),
+		ContractAddress: getContractAddress(),
 	}
 
 	_, err = questionsCollection.InsertOne(context.TODO(), q)
@@ -87,7 +90,7 @@ func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cursor, err := questionsCollection.Find(context.TODO(), bson.M{"receiver": address})
+	cursor, err := questionsCollection.Find(context.TODO(), bson.M{"receiver": address, "contractAddress": getContractAddress()})
 	if err != nil {
 		log.Printf("[%s] Error finding questions for receiver: %v", requestID, err)
 		if !errors.Is(err, mongo.ErrNoDocuments) {
@@ -123,7 +126,7 @@ func questionByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q, err := findQuestionById(id)
+	q, err := findQuestionByIdAndContractAddress(id, getContractAddress())
 	if err != nil {
 		log.Printf("[%s] Error finding question by ID: %v", requestID, err)
 		if !errors.Is(err, mongo.ErrNoDocuments) {
@@ -139,9 +142,9 @@ func questionByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(q)
 }
 
-func findQuestionById(id string) (Question, error) {
+func findQuestionByIdAndContractAddress(id, contractAddress string) (Question, error) {
 	var q Question
-	err := questionsCollection.FindOne(context.TODO(), bson.M{"id": id}).Decode(&q)
+	err := questionsCollection.FindOne(context.TODO(), bson.M{"id": id, "contractAddress": contractAddress}).Decode(&q)
 	return q, err
 }
 
@@ -156,7 +159,8 @@ func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cursor, err := questionsCollection.Find(context.TODO(), bson.M{"sender": address})
+	cursor, err := questionsCollection.Find(context.TODO(), bson.M{"sender": address, "contractAddress": getContractAddress()})
+
 	if err != nil {
 		log.Printf("[%s] Error finding questions from sender: %v", requestID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -192,7 +196,7 @@ func submitAnswer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filter := bson.M{"id": req.QuestionID}
+	filter := bson.M{"id": req.QuestionID, "contractAddress": getContractAddress()}
 	update := bson.M{
 		"$set": bson.M{
 			"answered": true,
@@ -210,7 +214,7 @@ func submitAnswer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q, err := findQuestionById(req.QuestionID)
+	q, err := findQuestionByIdAndContractAddress(req.QuestionID, getContractAddress())
 	if err != nil {
 		log.Printf("[%s] Error finding question by ID=%s after update: %v", requestID, req.QuestionID, err)
 		if !errors.Is(err, mongo.ErrNoDocuments) {
@@ -253,7 +257,11 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 
 	var q Question
 
-	err := questionsCollection.FindOne(context.TODO(), bson.M{"tokenID": tokenID}).Decode(&q)
+	err := questionsCollection.FindOne(context.TODO(), bson.M{
+		"tokenID":         tokenID,
+		"contractAddress": getContractAddress(),
+	}).Decode(&q)
+
 	if err != nil {
 		log.Printf("[%s] Error finding question by tokenID=%s: %v", requestID, tokenID, err)
 		if !errors.Is(err, mongo.ErrNoDocuments) {

@@ -159,6 +159,19 @@ func generateTokenId() (*big.Int, error) {
 		return currentNftId.Add(currentNftId, big.NewInt(1)), nil
 	}
 
+	var start int64 = 0
+
+	fromEnv := os.Getenv("CURRENT_NFT_ID")
+	if fromEnv != "" {
+		start, err = strconv.ParseInt(fromEnv, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing CURRENT_NFT_ID from .env %s", fromEnv)
+		}
+
+		currentNftId = new(big.Int).SetInt64(start)
+		return currentNftId, nil
+	}
+
 	var result struct {
 		TokenID uint64 `bson:"tokenId"`
 	}
@@ -168,16 +181,8 @@ func generateTokenId() (*big.Int, error) {
 	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, err
 	}
-	if errors.Is(err, mongo.ErrNoDocuments) {
-		var start int64 = 0
 
-		fromEnv := os.Getenv("CURRENT_NFT_ID")
-		if fromEnv != "" {
-			start, err = strconv.ParseInt(fromEnv, 10, 64)
-			if err != nil {
-				return nil, fmt.Errorf("error parsing CURRENT_NFT_ID from .env %s", fromEnv)
-			}
-		}
+	if errors.Is(err, mongo.ErrNoDocuments) {
 		currentNftId = big.NewInt(start)
 	} else {
 		currentNftId = big.NewInt(int64(result.TokenID + 1))

@@ -306,7 +306,7 @@ func buildDescription(q Question) string {
 		description = "Q: ###encrypted###"
 	}
 
-	description += "\n\n\nSee your anonymous questions and answers here <a href=\"https://ask-fm-onchain-hackathon-jul-2024.fly.dev/\">MegaAsk: Ask.fm onchain</a>"
+	description += "\n\n\nSee your anonymous questions and answers here [MegaAsk: Ask.fm onChain](\"https://ask-fm-onchain-hackathon-jul-2024.fly.dev/\")"
 
 	return description
 }

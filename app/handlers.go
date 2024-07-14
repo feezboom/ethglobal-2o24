@@ -246,10 +246,13 @@ func buildImage(q Question) string {
 }
 
 func buildDescription(q Question) string {
-	answer := "Original question: " + q.Question + "\nEncrypted question: encrypted#" + q.Question
+
+	description := q.Question
 	if q.Answered {
-		answer += "\nAnswer: " + q.Answer
+		description = "Q:" + description + "\nAnswer: " + q.Answer
+	} else {
+		description = "Q: ###encrypted###" + description
 	}
 
-	return answer
+	return description
 }

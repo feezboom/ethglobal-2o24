@@ -185,7 +185,7 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type ResponseNft struct {
-		Name        string         `json:"id"`
+		Name        string         `json:"name"`
 		Description string         `json:"description"`
 		Image       string         `json:"image"`
 		Attributes  []NftAttribute `json:"attributes"`
@@ -208,7 +208,16 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 		Name:        "New Question",
 		Description: q.Question,
 		Image:       "https://files.slack.com/files-pri/T3V7DQ6HW-F07C9P67HLJ/nft_ask.png",
-		Attributes:  nil,
+		Attributes: []NftAttribute{
+			{
+				TraitType: "OriginalQuestion",
+				Value:     q.Question,
+			},
+			{
+				TraitType: "EncryptedQuestion",
+				Value:     "encrypted:" + q.Question,
+			},
+		},
 	}
 
 	w.Header().Add("Content-Type", "application/json")

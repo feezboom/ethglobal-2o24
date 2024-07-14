@@ -99,7 +99,7 @@ func listQuestionsForMe(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cursor.Close(context.TODO())
 
-	var questions []Question
+	questions := make([]Question, 0)
 	if err := cursor.All(context.TODO(), &questions); err != nil {
 		log.Printf("[%s] Error decoding questions: %v", requestID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -164,7 +164,7 @@ func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cursor.Close(context.TODO())
 
-	var questions []Question
+	questions := make([]Question, 0)
 	if err := cursor.All(context.TODO(), &questions); err != nil {
 		log.Printf("[%s] Error decoding questions: %v", requestID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -224,7 +225,7 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 	nft := ResponseNft{
 		Name:        "New Question",
 		Description: buildDescription(q),
-		Image:       "https://files.slack.com/files-pri/T3V7DQ6HW-F07C9P67HLJ/nft_ask.png",
+		Image:       buildImage(q),
 		Attributes: []NftAttribute{
 			{
 				TraitType: "IsAnswered",
@@ -235,6 +236,13 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(nft)
+}
+
+func buildImage(q Question) string {
+	if q.Answered {
+		return "https://expression-statement.fly.dev/ask-nft?text=" + url.QueryEscape(q.Answer)
+	}
+	return "ipfs://QmNSJtpv8W85T3ZSPtmaZvSS3bK8jp7Pus36qT8beEE42e"
 }
 
 func buildDescription(q Question) string {

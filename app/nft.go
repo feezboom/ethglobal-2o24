@@ -183,7 +183,7 @@ func generateTokenId() (*big.Int, error) {
 	}
 
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		currentNftId = big.NewInt(start)
+		currentNftId = big.NewInt(0)
 	} else {
 		currentNftId = big.NewInt(int64(result.TokenID + 1))
 	}

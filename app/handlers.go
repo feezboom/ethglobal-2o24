@@ -99,8 +99,7 @@ func questionByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var q Question
-	err := questionsCollection.FindOne(context.TODO(), bson.M{"id": id}).Decode(&q)
+	q, err := findQuestionById(id)
 	if err != nil {
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -112,6 +111,12 @@ func questionByID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(q)
+}
+
+func findQuestionById(id string) (Question, error) {
+	var q Question
+	err := questionsCollection.FindOne(context.TODO(), bson.M{"id": id}).Decode(&q)
+	return q, err
 }
 
 func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +143,7 @@ func listQuestionsFromMe(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(questions)
 }
 
-func answerQuestion(w http.ResponseWriter, r *http.Request) {
+func submitAnswer(w http.ResponseWriter, r *http.Request) {
 	var req AnswerQuestionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -167,6 +172,17 @@ func answerQuestion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	q, err := findQuestionById(req.QuestionID)
+	if err != nil {
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+		return
+	}
+
+	json.NewEncoder(w).Encode(q)
 	w.WriteHeader(http.StatusOK)
 }
 

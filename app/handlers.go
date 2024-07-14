@@ -208,7 +208,7 @@ func submitAnswer(w http.ResponseWriter, r *http.Request) {
 
 	q, err := findQuestionById(req.QuestionID)
 	if err != nil {
-		log.Printf("[%s] Error finding question by ID after update: %v", requestID, err)
+		log.Printf("[%s] Error finding question by ID=%s after update: %v", requestID, req.QuestionID, err)
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {

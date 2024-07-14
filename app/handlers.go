@@ -280,7 +280,7 @@ func nftMetadata(w http.ResponseWriter, r *http.Request) {
 		Attributes: []NftAttribute{
 			{
 				TraitType: "IsAnswered",
-				Value:     strconv.FormatBool(true),
+				Value:     strconv.FormatBool(q.Answered),
 			},
 		},
 	}
